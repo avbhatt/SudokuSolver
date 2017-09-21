@@ -8,11 +8,21 @@ public class Cell {
     private HashSet<Integer> possible;
     public Cell(int val){
         value = val;
-        set = true;
+        if (val != 0)
+            set = true;
+        else set = false;
     }
 
-    public int getValue() {
+    public Integer getValue() {
         return value;
+    }
+
+    public void setValue(int value) {
+        this.value = value;
+    }
+
+    public void setSet(Boolean set) {
+        this.set = set;
     }
 
     public Boolean getSet() {
