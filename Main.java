@@ -1,13 +1,12 @@
 package com.adit;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
+import com.sun.org.apache.xpath.internal.operations.Bool;
+
+import java.util.*;
 
 public class Main {
 
-    public static void printGrid(Cell[][] grid){
+    public static void printGrid(Cell[][] grid, Boolean possible){
         for (int i = 0; i < 9; i++){
             if (i % 3 == 0) {
                 System.out.print("-------------------------\n");
@@ -16,7 +15,17 @@ public class Main {
                 if (j % 3 == 0) {
                     System.out.print("| ");
                 }
-                System.out.print(grid[i][j].getValue() + " {" + grid[i][j].getPossible() + "} ");
+                if (possible){
+                    String top = grid[i][j].getValue() + " ";
+                    if (grid[i][j].getPossible() != null){
+                        top += "{" + grid[i][j].getPossible() + "} ";
+                    }
+                    System.out.print(top);
+                }
+                else {
+                    System.out.print(grid[i][j].getValue() + " ");
+                }
+
                 if (j == 8) {
                     System.out.print("|");
                 }
@@ -64,7 +73,7 @@ public class Main {
         }
     }
 
-    public static HashSet<Integer> possibles(Cell[][] grid, ArrayList<LinkedHashSet<Cell>> rows, ArrayList<LinkedHashSet<Cell>> cols, ArrayList<LinkedHashSet<Cell>> boxes, int row, int col){
+    public static HashSet<Integer> possibles(Cell[][] grid, ArrayList<LinkedHashSet<Integer>> rows, ArrayList<LinkedHashSet<Integer>> cols, ArrayList<LinkedHashSet<Integer>> boxes, int row, int col){
         HashSet<Integer> possible = new HashSet<>();
         int box = getBox(row, col);
 
@@ -77,15 +86,32 @@ public class Main {
     }
 
 
-    public static void solve(Cell[][] grid, ArrayList<LinkedHashSet<Cell>> rows, ArrayList<LinkedHashSet<Cell>> cols, ArrayList<LinkedHashSet<Cell>> boxes){
-        for (int i = 0; i < 9; i++) {
-            for (int j = 0; j < 9; j++) {
-                if (grid[i][j].getSet()) {
-                    grid[i][j].setPossible(possibles(grid, rows, cols, boxes, i, j));
+    public static void solve(Cell[][] grid, ArrayList<LinkedHashSet<Integer>> rows, ArrayList<LinkedHashSet<Integer>> cols, ArrayList<LinkedHashSet<Integer>> boxes){
+        while (true) {
+            int improve = 0;
+            for (int i = 0; i < 9; i++) {
+                for (int j = 0; j < 9; j++) {
+                    HashSet<Integer> temp = new HashSet<>();
+                    if (!grid[i][j].getSet()) {
+                        temp = possibles(grid, rows, cols, boxes, i, j);
+                        grid[i][j].setPossible(temp);
+                    }
+                    if (temp.size() == 1){
+                        int val = temp.iterator().next();
+                        grid[i][j].setValue(val);
+                        rows.get(i).add(val);
+                        cols.get(j).add(val);
+                        boxes.get(getBox(i,j)).add(val);
+                        grid[i][j].setPossible(null);
+                        grid[i][j].setSet(true);
+                        improve++;
+                    }
                 }
             }
+            if (improve == 0){
+                break;
+            }
         }
-        printGrid(grid);
     }
 
     public static void main(String[] args) {
@@ -95,7 +121,17 @@ public class Main {
                 grid[i][j] = new Cell(1);
             }
         }*/
-        Cell[][] grid = {{new Cell(2),new Cell(0),new Cell(8),new Cell(3),new Cell(0),new Cell(0),new Cell(0),new Cell(6),new Cell(1)},
+        Cell[][] grid = {
+                {new Cell(2),new Cell(4),new Cell(0),new Cell(0),new Cell(0),new Cell(9),new Cell(0),new Cell(0),new Cell(0)},
+                {new Cell(1),new Cell(0),new Cell(0),new Cell(0),new Cell(3),new Cell(0),new Cell(0),new Cell(0),new Cell(0)},
+                {new Cell(0),new Cell(0),new Cell(2),new Cell(2),new Cell(6),new Cell(0),new Cell(0),new Cell(3),new Cell(0)},
+                {new Cell(0),new Cell(0),new Cell(4),new Cell(4),new Cell(0),new Cell(0),new Cell(3),new Cell(0),new Cell(0)},
+                {new Cell(5),new Cell(0),new Cell(1),new Cell(1),new Cell(8),new Cell(3),new Cell(7),new Cell(0),new Cell(9)},
+                {new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(7),new Cell(8),new Cell(0),new Cell(0)},
+                {new Cell(0),new Cell(7),new Cell(0),new Cell(0),new Cell(1),new Cell(5),new Cell(0),new Cell(0),new Cell(0)},
+                {new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(2),new Cell(0),new Cell(0),new Cell(0),new Cell(1)},
+                {new Cell(0),new Cell(0),new Cell(3),new Cell(3),new Cell(0),new Cell(0),new Cell(0),new Cell(8),new Cell(7)}};
+        /*{{new Cell(2),new Cell(0),new Cell(8),new Cell(3),new Cell(0),new Cell(0),new Cell(0),new Cell(6),new Cell(1)},
                 {new Cell(0),new Cell(7),new Cell(1),new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(5)},
                 {new Cell(0),new Cell(3),new Cell(0),new Cell(6),new Cell(7),new Cell(0),new Cell(0),new Cell(0),new Cell(0)},
                 {new Cell(4),new Cell(0),new Cell(0),new Cell(7),new Cell(5),new Cell(0),new Cell(6),new Cell(1),new Cell(8)},
@@ -103,32 +139,31 @@ public class Main {
                 {new Cell(1),new Cell(8),new Cell(5),new Cell(0),new Cell(6),new Cell(4),new Cell(0),new Cell(0),new Cell(3)},
                 {new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(9),new Cell(2),new Cell(0),new Cell(8),new Cell(0)},
                 {new Cell(8),new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(5),new Cell(9),new Cell(0)},
-                {new Cell(7),new Cell(4),new Cell(0),new Cell(0),new Cell(0),new Cell(6),new Cell(1),new Cell(0),new Cell(2)}};
-        printGrid(grid);
+                {new Cell(7),new Cell(4),new Cell(0),new Cell(0),new Cell(0),new Cell(6),new Cell(1),new Cell(0),new Cell(2)}};*/
+        printGrid(grid, false);
 
-        ArrayList<LinkedHashSet<Cell>> rows = new ArrayList<>();
-        ArrayList<LinkedHashSet<Cell>> cols = new ArrayList<>();
-        ArrayList<LinkedHashSet<Cell>> boxes = new ArrayList<>(9);
+        ArrayList<LinkedHashSet<Integer>> rows = new ArrayList<>();
+        ArrayList<LinkedHashSet<Integer>> cols = new ArrayList<>();
+        ArrayList<LinkedHashSet<Integer>> boxes = new ArrayList<>(9);
         for (int j = 0; j < 9; j++) {
-            rows.add(new LinkedHashSet<>(Arrays.asList(grid[j])));
-            LinkedHashSet<Cell> temp = new LinkedHashSet<>();
+            List<Integer> trow = new ArrayList<>();
+            Arrays.asList(grid[j]).forEach( (cell) -> trow.add(cell.getValue()));
+            rows.add(new LinkedHashSet<>(trow));
+            LinkedHashSet<Integer> tcol = new LinkedHashSet<>();
             for (int i = 0; i < 9; i++) {
-                temp.add(grid[i][j]);
+                tcol.add(grid[i][j].getValue());
                 try {
                     int box = getBox(j, i);
-                    (boxes.get(box)).add(grid[j][i]);
+                    (boxes.get(box)).add(grid[j][i].getValue());
                 } catch(IndexOutOfBoundsException e) {
-                    LinkedHashSet<Cell> t = new LinkedHashSet<>();
-                    t.add(grid[j][i]);
+                    LinkedHashSet<Integer> t = new LinkedHashSet<>();
+                    t.add(grid[j][i].getValue());
                     boxes.add(t);
                 }
             }
-            cols.add(temp);
+            cols.add(tcol);
         }
-        System.out.println(rows);
-        System.out.println(cols);
-        System.out.print(boxes);
-
         solve(grid, rows, cols, boxes);
+        printGrid(grid, true);
     }
 }
