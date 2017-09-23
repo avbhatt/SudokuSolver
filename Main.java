@@ -134,7 +134,10 @@ public class Main {
     }
 
     public static void guess(Cell[][] grid, ArrayList<LinkedHashSet<Integer>> rows, ArrayList<LinkedHashSet<Integer>> cols, ArrayList<LinkedHashSet<Integer>> boxes, int[] g){
-        Iterator<Integer> potentialIterator = grid[g[0]][g[1]].getPossible().iterator();
+        Iterator<Integer> potentialIterator;
+        if (grid[g[0]][g[1]].emptyStack())
+            potentialIterator = grid[g[0]][g[1]].getPossible().iterator();
+        else potentialIterator = grid[g[0]][g[1]].getGuess().iterator();
         finish:
         while (potentialIterator.hasNext()) {
             ArrayList<ArrayList<Integer>> changesPossibles = new ArrayList<>();
@@ -164,7 +167,7 @@ public class Main {
                                 grid[i][j].addGuess(temp);
                                 changesPossibles.add(new ArrayList<>(Arrays.asList(i, j)));
                             }
-                            if (temp.size() < bestGuess[2]) {
+                            if (temp.size() != 1 && temp.size() < bestGuess[2]) {
                                 bestGuess[2] = temp.size();
                                 bestGuess[1] = j;
                                 bestGuess[0] = i;
@@ -182,6 +185,7 @@ public class Main {
                                 // Dead end, guess was incorrect
                                 printGrid(grid);
                                 reset(grid, rows, cols, boxes, changesPossibles, changesConstraints);
+                                printGrid(grid);
                                 break cycle;
                             }
                         }
@@ -189,10 +193,15 @@ public class Main {
                 }
                 if (improve == 0) {
                     if (bestGuess[0] != -1) {
-                        printGrid(grid, true);
+                        printGrid(grid);
                         guess(grid, rows, cols, boxes, bestGuess);
+                        //if (!potentialIterator.hasNext()) {
+                            reset(grid, rows, cols, boxes, changesPossibles, changesConstraints);
+                            printGrid(grid);
+                        //}
+                        break cycle;
                     }
-                    break finish;
+                    else break finish;
                 }
             }
         }
@@ -287,6 +296,6 @@ public class Main {
         }
         solve(grid, rows, cols, boxes);
         System.out.println("Solution:");
-        printGrid(grid);
+        printGrid(grid, false);
     }
 }
