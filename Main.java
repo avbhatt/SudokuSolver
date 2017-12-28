@@ -4,7 +4,7 @@ import java.util.*;
 
 public class Main {
 
-    public static void printGrid(Cell[][] grid, Boolean possible){
+    private static void printGrid(Cell[][] grid, Boolean possible){
         for (int i = 0; i < 9; i++){
             if (i % 3 == 0) {
                 System.out.print("-------------------------\n");
@@ -44,7 +44,7 @@ public class Main {
                 if (j % 3 == 0) {
                     System.out.print("| ");
                 }
-                String top = "";
+                String top;
                 if (grid[i][j].getSet())
                     top = grid[i][j].getValue() + " ";
                 else if (grid[i][j].getGuessSet())
@@ -70,7 +70,7 @@ public class Main {
         }
     }
 
-    public static int getBox(int j, int i){
+    private static int getBox(int j, int i){
         if (j < 3) {
             if (i < 3) {
                 return 0;
@@ -106,7 +106,7 @@ public class Main {
         }
     }
 
-    public static HashSet<Integer> possibles(Cell[][] grid, ArrayList<LinkedHashSet<Integer>> rows, ArrayList<LinkedHashSet<Integer>> cols, ArrayList<LinkedHashSet<Integer>> boxes, int row, int col){
+    private static HashSet<Integer> possibles(Cell[][] grid, ArrayList<LinkedHashSet<Integer>> rows, ArrayList<LinkedHashSet<Integer>> cols, ArrayList<LinkedHashSet<Integer>> boxes, int row, int col){
         HashSet<Integer> possible = new HashSet<>();
         int box = getBox(row, col);
 
@@ -118,22 +118,22 @@ public class Main {
         return possible;
     }
 
-    public static void reset(Cell[][] grid, ArrayList<LinkedHashSet<Integer>> rows, ArrayList<LinkedHashSet<Integer>> cols, ArrayList<LinkedHashSet<Integer>> boxes, ArrayList<ArrayList<Integer>> changesPossibles, ArrayList<ArrayList<Integer>> changesConstraints){
-        for (int change = 0; change < changesPossibles.size(); change++){
-            grid[changesPossibles.get(change).get(0)][changesPossibles.get(change).get(1)].resetGuessPossible();
+    private static void reset(Cell[][] grid, ArrayList<LinkedHashSet<Integer>> rows, ArrayList<LinkedHashSet<Integer>> cols, ArrayList<LinkedHashSet<Integer>> boxes, ArrayList<ArrayList<Integer>> changesPossibles, ArrayList<ArrayList<Integer>> changesConstraints){
+        for (ArrayList<Integer> changesPossible : changesPossibles) {
+            grid[changesPossible.get(0)][changesPossible.get(1)].resetGuessPossible();
         }
-        for (int change = 0; change < changesConstraints.size(); change++){
-            int i = changesConstraints.get(change).get(0);
-            int j = changesConstraints.get(change).get(1);
-            int val = changesConstraints.get(change).get(2);
+        for (ArrayList<Integer> changesConstraint : changesConstraints) {
+            int i = changesConstraint.get(0);
+            int j = changesConstraint.get(1);
+            int val = changesConstraint.get(2);
             grid[i][j].resetGuess();
             rows.get(i).remove(val);
             cols.get(j).remove(val);
-            boxes.get(getBox(i,j)).remove(val);
+            boxes.get(getBox(i, j)).remove(val);
         }
     }
 
-    public static void guess(Cell[][] grid, ArrayList<LinkedHashSet<Integer>> rows, ArrayList<LinkedHashSet<Integer>> cols, ArrayList<LinkedHashSet<Integer>> boxes, int[] g){
+    private static void guess(Cell[][] grid, ArrayList<LinkedHashSet<Integer>> rows, ArrayList<LinkedHashSet<Integer>> cols, ArrayList<LinkedHashSet<Integer>> boxes, int[] g){
         Iterator<Integer> potentialIterator;
         if (grid[g[0]][g[1]].emptyStack())
             potentialIterator = grid[g[0]][g[1]].getPossible().iterator();
@@ -147,9 +147,10 @@ public class Main {
             rows.get(g[0]).add(potential);
             cols.get(g[1]).add(potential);
             boxes.get(getBox(g[0],g[1])).add(potential);
-            changesConstraints.add(new ArrayList<Integer>(Arrays.asList(g[0],g[1],potential)));
+            changesConstraints.add(new ArrayList<>(Arrays.asList(g[0], g[1], potential)));
             cycle:
             while (true) {
+                //printGrid(grid);
                 int improve = 0;
                 int[] bestGuess = {-1, -1, 9};
                 for (int i = 0; i < 9; i++) {
@@ -179,13 +180,13 @@ public class Main {
                                 rows.get(i).add(val);
                                 cols.get(j).add(val);
                                 boxes.get(getBox(i, j)).add(val);
-                                changesConstraints.add(new ArrayList<Integer>(Arrays.asList(i, j, val)));
+                                changesConstraints.add(new ArrayList<>(Arrays.asList(i, j, val)));
                                 improve++;
                             } else if (temp.size() == 0) {
                                 // Dead end, guess was incorrect
-                                printGrid(grid);
+                                //printGrid(grid);
                                 reset(grid, rows, cols, boxes, changesPossibles, changesConstraints);
-                                printGrid(grid);
+                                //printGrid(grid);
                                 break cycle;
                             }
                         }
@@ -193,21 +194,29 @@ public class Main {
                 }
                 if (improve == 0) {
                     if (bestGuess[0] != -1) {
-                        printGrid(grid);
+                        //printGrid(grid);
                         guess(grid, rows, cols, boxes, bestGuess);
-                        //if (!potentialIterator.hasNext()) {
+                        if (!grid[0][0].getSolved())
                             reset(grid, rows, cols, boxes, changesPossibles, changesConstraints);
-                            printGrid(grid);
-                        //}
-                        break cycle;
+                        //printGrid(grid);
+                        break;
                     }
-                    else break finish;
+                    else {
+                        grid[0][0].setSolved();
+                        for (int i = 0; i < 9; i++){
+                            for (int j = 0; j < 9; j++){
+                                if (grid[i][j].getValue() == 0)
+                                    grid[i][j].setValue(grid[i][j].getGuessValue());
+                            }
+                        }
+                        break finish;
+                    }
                 }
             }
         }
     }
 
-    public static void solve(Cell[][] grid, ArrayList<LinkedHashSet<Integer>> rows, ArrayList<LinkedHashSet<Integer>> cols, ArrayList<LinkedHashSet<Integer>> boxes){
+    private static void solve(Cell[][] grid, ArrayList<LinkedHashSet<Integer>> rows, ArrayList<LinkedHashSet<Integer>> cols, ArrayList<LinkedHashSet<Integer>> boxes){
         while (true) {
             int improve = 0;
             int[] bestGuess = {-1,-1,9};
@@ -236,7 +245,7 @@ public class Main {
             }
             if (improve == 0){
                 if (bestGuess[0] != -1){
-                    printGrid(grid, true);
+                    //printGrid(grid, true);
                     guess(grid, rows, cols, boxes, bestGuess);
                 }
                 break;
@@ -245,14 +254,8 @@ public class Main {
     }
 
     public static void main(String[] args) {
-        /*Cell[][] grid = new Cell[9][9];
-        for (int i = 0; i < 9; i++) {
-            for (int j = 0; j < 9; j++) {
-                grid[i][j] = new Cell(1);
-            }
-        }*/
         Cell[][] grid = {
-                {new Cell(0),new Cell(2),new Cell(0),new Cell(0),new Cell(0),new Cell(4),new Cell(9),new Cell(0),new Cell(3)},
+              /*{new Cell(0),new Cell(2),new Cell(0),new Cell(0),new Cell(0),new Cell(4),new Cell(9),new Cell(0),new Cell(3)},
                 {new Cell(0),new Cell(6),new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(8)},
                 {new Cell(3),new Cell(0),new Cell(4),new Cell(0),new Cell(9),new Cell(5),new Cell(0),new Cell(0),new Cell(0)},
                 {new Cell(9),new Cell(4),new Cell(2),new Cell(6),new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(7)},
@@ -260,8 +263,8 @@ public class Main {
                 {new Cell(5),new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(8),new Cell(6),new Cell(4),new Cell(1)},
                 {new Cell(0),new Cell(0),new Cell(0),new Cell(7),new Cell(8),new Cell(0),new Cell(1),new Cell(0),new Cell(4)},
                 {new Cell(6),new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(7),new Cell(0)},
-                {new Cell(4),new Cell(0),new Cell(1),new Cell(5),new Cell(0),new Cell(0),new Cell(0),new Cell(2),new Cell(0)}};
-               /*{{new Cell(2),new Cell(0),new Cell(8),new Cell(3),new Cell(0),new Cell(0),new Cell(0),new Cell(6),new Cell(1)},
+                {new Cell(4),new Cell(0),new Cell(1),new Cell(5),new Cell(0),new Cell(0),new Cell(0),new Cell(2),new Cell(0)}};*/
+             /* {new Cell(2),new Cell(0),new Cell(8),new Cell(3),new Cell(0),new Cell(0),new Cell(0),new Cell(6),new Cell(1)},
                 {new Cell(0),new Cell(7),new Cell(1),new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(5)},
                 {new Cell(0),new Cell(3),new Cell(0),new Cell(6),new Cell(7),new Cell(0),new Cell(0),new Cell(0),new Cell(0)},
                 {new Cell(4),new Cell(0),new Cell(0),new Cell(7),new Cell(5),new Cell(0),new Cell(6),new Cell(1),new Cell(8)},
@@ -270,6 +273,24 @@ public class Main {
                 {new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(9),new Cell(2),new Cell(0),new Cell(8),new Cell(0)},
                 {new Cell(8),new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(5),new Cell(9),new Cell(0)},
                 {new Cell(7),new Cell(4),new Cell(0),new Cell(0),new Cell(0),new Cell(6),new Cell(1),new Cell(0),new Cell(2)}};*/
+             /*{new Cell(0),new Cell(9),new Cell(0),new Cell(0),new Cell(0),new Cell(7),new Cell(1),new Cell(0),new Cell(2)},
+                {new Cell(2),new Cell(0),new Cell(1),new Cell(0),new Cell(3),new Cell(4),new Cell(0),new Cell(0),new Cell(0)},
+                {new Cell(0),new Cell(4),new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(6)},
+                {new Cell(1),new Cell(2),new Cell(6),new Cell(3),new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(7)},
+                {new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(0)},
+                {new Cell(4),new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(6),new Cell(9),new Cell(2),new Cell(5)},
+                {new Cell(3),new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(6),new Cell(0)},
+                {new Cell(0),new Cell(0),new Cell(0),new Cell(7),new Cell(5),new Cell(0),new Cell(2),new Cell(0),new Cell(8)},
+                {new Cell(8),new Cell(0),new Cell(5),new Cell(2),new Cell(0),new Cell(0),new Cell(0),new Cell(9),new Cell(0)}};*/
+                {new Cell(0),new Cell(0),new Cell(5),new Cell(0),new Cell(0),new Cell(3),new Cell(6),new Cell(0),new Cell(0)},
+                {new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(5),new Cell(0),new Cell(0),new Cell(0),new Cell(4)},
+                {new Cell(0),new Cell(2),new Cell(8),new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(3)},
+                {new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(7),new Cell(0),new Cell(9),new Cell(6)},
+                {new Cell(0),new Cell(4),new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(7),new Cell(0)},
+                {new Cell(6),new Cell(1),new Cell(0),new Cell(4),new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(0)},
+                {new Cell(7),new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(0),new Cell(2),new Cell(3),new Cell(0)},
+                {new Cell(9),new Cell(0),new Cell(0),new Cell(0),new Cell(2),new Cell(0),new Cell(0),new Cell(0),new Cell(0)},
+                {new Cell(0),new Cell(0),new Cell(2),new Cell(8),new Cell(0),new Cell(0),new Cell(9),new Cell(0),new Cell(0)}};
         System.out.println("Confirm Input:");
         printGrid(grid, false);
 
@@ -295,6 +316,7 @@ public class Main {
             cols.add(tcol);
         }
         solve(grid, rows, cols, boxes);
+
         System.out.println("Solution:");
         printGrid(grid, false);
     }
