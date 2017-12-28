@@ -13,15 +13,15 @@ public class Cell {
     private HashSet<Integer> possible;
     private int guessValue;
     private Boolean guessSet;
+    private Boolean solved;
     private Stack<HashSet<Integer>> guesses;
     //private HashSet<Integer> guessPossible;
 
     public Cell(int val){
         value = val;
-        if (val != 0)
-            set = true;
-        else set = false;
+        set = val != 0;
         guesses = new Stack<>();
+        solved = false;
     }
 
     public Integer getValue() {
@@ -33,6 +33,9 @@ public class Cell {
         this.set = true;
     }
 
+    public void setSolved(){
+        solved = true;
+    }
 
     public Boolean getSet() {
         return set;
@@ -61,13 +64,9 @@ public class Cell {
         return guessSet;
     }
 
-   /* public HashSet<Integer> getGuessPossible() {
-        return guessPossible;
+    public Boolean getSolved(){
+        return solved;
     }
-
-    public void setGuessPossible(HashSet<Integer> guessPossible) {
-        this.guessPossible = guessPossible;
-    }*/
 
     public HashSet<Integer> getGuess() {
         if (guesses.empty()){
